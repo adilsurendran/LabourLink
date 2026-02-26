@@ -11,6 +11,7 @@ import 'package:labourlink/user/view_added_work_details.dart';
 import 'package:labourlink/user/work_details_user.dart';
 import 'package:labourlink/worker/Register_worker.dart';
 import 'package:labourlink/user/profile_user.dart';
+import 'package:labourlink/chat_bot_page.dart';
 
 class CustomerHomePage extends StatefulWidget {
   const CustomerHomePage({super.key});
@@ -163,6 +164,21 @@ class _CustomerHomePageState extends State<CustomerHomePage>
                   onPressed: () => _scaffoldKey.currentState?.openDrawer(),
                 ),
                 actions: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.smart_toy_outlined,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ChatBotPage(),
+                        ),
+                      );
+                    },
+                  ),
                   GestureDetector(
                     onTap: () {
                       Navigator.push(

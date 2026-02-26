@@ -11,6 +11,7 @@ import 'package:labourlink/worker/WorkerProfile.dart';
 import 'package:dio/dio.dart';
 import 'package:labourlink/worker/sendfeedback.dart';
 import 'package:labourlink/worker/viewrequestfromuser.dart';
+import 'package:labourlink/chat_bot_page.dart';
 
 class WorkerHomePage extends StatefulWidget {
   const WorkerHomePage({super.key});
@@ -285,6 +286,21 @@ class _WorkerHomePageState extends State<WorkerHomePage>
                   onPressed: () => _scaffoldKey.currentState?.openDrawer(),
                 ),
                 actions: [
+                  IconButton(
+                    icon: Icon(
+                      Icons.smart_toy_outlined,
+                      color: _primaryColor,
+                      size: 28,
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ChatBotPage(),
+                        ),
+                      );
+                    },
+                  ),
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
