@@ -348,7 +348,7 @@ class _WorkDetailsUserState extends State<WorkDetailsUser>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          padding: EdgeInsets.only(left: 4, bottom: 8),
           child: Text(
             "Expected Work Date",
             style: TextStyle(

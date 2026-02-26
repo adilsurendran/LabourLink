@@ -3,6 +3,8 @@ import bcrypt from "bcryptjs";
 import User from "../models/user.js";
 import REQUEST from "../models/userRequest.js";
 import WORKER from "../models/worker.js";
+import mongoose from "mongoose";
+import jobRequestModel from "../models/jobRequestModel.js";
 
 export const registeruser = async (req, res) => {
   try {
@@ -168,6 +170,60 @@ export const cancelUserRequest = async (req, res) => {
   }
 };
 
+// Complete job request (from worker selection page)
+export const completeJobRequest = async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const { rating, review } = req.body;
+
+    if (!rating)
+      return res.status(400).json({ success: false, message: "Rating required" });
+
+    const request = await jobRequestModel.findById(requestId);
+
+    if (!request)
+      return res.status(404).json({ success: false, message: "Request not found" });
+
+    if (request.status !== "accepted")
+      return res.status(400).json({
+        success: false,
+        message: "Only accepted requests can be completed",
+      });
+
+    // 1. Update JobRequest
+    request.status = "completed";
+    await request.save();
+
+    // 2. Update the associated Work model
+    const work = await workModel.findById(request.workId);
+    if (work) {
+      work.status = "completed";
+      work.rating = rating;
+      work.review = review || null;
+      await work.save();
+    }
+
+    // 3. Update worker rating
+    const worker = await WORKER.findById(request.workerId);
+    if (worker) {
+      worker.rating.push(rating);
+      const total = worker.rating.reduce((a, b) => a + b, 0);
+      worker.avgRating = total / worker.rating.length;
+      await worker.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Job completed and rated successfully",
+      data: request,
+    });
+  } catch (error) {
+    console.error("Complete Job Request Error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
 // Complete work + rating
 export const completeWorkAndRate = async (req, res) => {
   try {
@@ -213,9 +269,6 @@ export const completeWorkAndRate = async (req, res) => {
 };
 
 
-import Work from "../models/workModel.js";
-import mongoose from "mongoose";
-import jobRequestModel from "../models/jobRequestModel.js";
 import workModel from "../models/workModel.js";
 
 // ================= ADD WORK =================
@@ -239,7 +292,7 @@ export const addWork = async (req, res) => {
       });
     }
 
-    const newWork = new Work({
+    const newWork = new workModel({
       profileId,
       title,
       description,
@@ -277,7 +330,7 @@ export const getWorksByProfile = async (req, res) => {
       });
     }
 
-    const works = await Work.find({ profileId })
+    const works = await workModel.find({ profileId })
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -430,7 +483,7 @@ export const acceptRequest = async (req, res) => {
       { status: "rejected" }
     );
 
-    await workModel.findByIdAndUpdate(request.workId, { status: "completed" })
+    await workModel.findByIdAndUpdate(request.workId, { status: "accepted" })
 
     res.status(200).json({
       success: true,
@@ -559,7 +612,7 @@ export const getUserDashboardStats = async (req, res) => {
       });
     }
 
-    const totalJobPosts = await Work.countDocuments({ profileId: userId });
+    const totalJobPosts = await workModel.countDocuments({ profileId: userId });
     const totalRequests = await REQUEST.countDocuments({ userId: userId });
 
     res.status(200).json({

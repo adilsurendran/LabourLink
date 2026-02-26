@@ -11,7 +11,6 @@ import 'package:labourlink/user/view_added_work_details.dart';
 import 'package:labourlink/user/work_details_user.dart';
 import 'package:labourlink/worker/Register_worker.dart';
 import 'package:labourlink/user/profile_user.dart';
-import 'package:labourlink/user/worker_profile.dart';
 
 class CustomerHomePage extends StatefulWidget {
   const CustomerHomePage({super.key});

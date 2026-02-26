@@ -16,7 +16,9 @@ class _UserRequestPageState extends State<UserRequestPage> {
   final Dio dio = Dio();
 
   List requests = [];
+  List filteredRequests = [];
   bool isLoading = true;
+  String selectedStatus = "all";
 
   final Color _primaryColor = const Color(0xFF4A00E0);
   final Color _secondaryColor = const Color(0xFF8E2DE2);
@@ -34,6 +36,7 @@ class _UserRequestPageState extends State<UserRequestPage> {
       if (mounted) {
         setState(() {
           requests = res.data;
+          _applyFilters();
           isLoading = false;
         });
       }
@@ -43,6 +46,19 @@ class _UserRequestPageState extends State<UserRequestPage> {
         setState(() => isLoading = false);
       }
     }
+  }
+
+  void _applyFilters() {
+    setState(() {
+      if (selectedStatus == "all") {
+        filteredRequests = requests;
+      } else {
+        filteredRequests = requests.where((req) {
+          final status = (req["status"] ?? "pending").toString().toLowerCase();
+          return status == selectedStatus;
+        }).toList();
+      }
+    });
   }
 
   Future<void> cancelRequest(String id) async {
@@ -206,6 +222,12 @@ class _UserRequestPageState extends State<UserRequestPage> {
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+            onPressed: fetchRequests,
+          ),
+        ],
       ),
       body: Stack(children: [_buildBackground(), _buildContent()]),
     );
@@ -246,41 +268,107 @@ class _UserRequestPageState extends State<UserRequestPage> {
   }
 
   Widget _buildContent() {
-    if (isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: Colors.white),
-      );
-    }
-
-    if (requests.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.history_edu_rounded,
-              color: Colors.white.withOpacity(0.2),
-              size: 100,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              "No requests found",
-              style: TextStyle(color: Colors.white70, fontSize: 18),
-            ),
-          ],
-        ).animate().fadeIn(),
-      );
-    }
-
     return SafeArea(
+      child: Column(
+        children: [
+          _buildFilterBar(),
+          Expanded(
+            child: isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  )
+                : filteredRequests.isEmpty
+                ? _buildEmptyState()
+                : ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: filteredRequests.length,
+                    itemBuilder: (context, index) {
+                      return _buildRequestCard(filteredRequests[index], index);
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterBar() {
+    final statusList = ["all", "pending", "accepted", "rejected", "completed"];
+
+    return Container(
+      height: 35,
+      margin: const EdgeInsets.symmetric(vertical: 10),
       child: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
-        physics: const BouncingScrollPhysics(),
-        itemCount: requests.length,
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: statusList.length,
         itemBuilder: (context, index) {
-          return _buildRequestCard(requests[index], index);
+          final status = statusList[index];
+          final isSelected = selectedStatus == status;
+
+          return Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: GestureDetector(
+              onTap: () {
+                setState(() => selectedStatus = status);
+                _applyFilters();
+              },
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(15),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? Colors.white.withOpacity(0.3)
+                          : Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(
+                        color: isSelected ? Colors.white : Colors.white24,
+                      ),
+                    ),
+                    child: Text(
+                      status.toUpperCase(),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
         },
       ),
+    ).animate().fadeIn(duration: 500.ms).slideX(begin: 0.1, end: 0);
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.history_edu_rounded,
+            color: Colors.white.withOpacity(0.2),
+            size: 100,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            "No $selectedStatus requests found",
+            style: const TextStyle(color: Colors.white70, fontSize: 18),
+          ),
+        ],
+      ).animate().fadeIn(),
     );
   }
 

@@ -35,6 +35,8 @@ const workSchema = new mongoose.Schema(
       type: String,
       default: "pending",
     },
+    rating:{type:Number,default:null},
+    review:{type:String,default:null},
   },
   {
     timestamps: true,

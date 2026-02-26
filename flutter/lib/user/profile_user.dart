@@ -370,7 +370,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                         setState(() => _useCurrentLocation = val);
                         if (val) _getCurrentLocation();
                       },
-                      activeColor: Colors.white,
+                      activeThumbColor: Colors.white,
                       activeTrackColor: Colors.white30,
                     ),
                   ],

@@ -163,6 +163,133 @@ class _JobRequestsPageState extends State<JobRequestsPage> {
     }
   }
 
+  // ================= COMPLETE WORK =================
+
+  Future<void> completeJobRequest(
+    String id,
+    double rating,
+    String review,
+  ) async {
+    try {
+      await dio.put(
+        "$baseurl/api/user/complete-job-request/$id",
+        data: {"rating": rating, "review": review},
+      );
+      fetchRequests();
+    } catch (e) {
+      debugPrint("Complete job request error: $e");
+    }
+  }
+
+  void showRatingDialog(String requestId) {
+    double selectedRating = 0;
+    TextEditingController reviewController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (_) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: AlertDialog(
+                backgroundColor: const Color(0xFF1A1A1A).withOpacity(0.9),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(25),
+                  side: const BorderSide(color: Colors.white10),
+                ),
+                title: const Text(
+                  "Rate Your Experience",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(5, (index) {
+                        return IconButton(
+                          icon: Icon(
+                            index < selectedRating
+                                ? Icons.star
+                                : Icons.star_border,
+                            color: Colors.amber,
+                            size: 32,
+                          ),
+                          onPressed: () {
+                            setStateDialog(() {
+                              selectedRating = index + 1.0;
+                            });
+                          },
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: reviewController,
+                      style: const TextStyle(color: Colors.white),
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        hintText: "Write a review (optional)",
+                        hintStyle: TextStyle(
+                          color: Colors.white.withOpacity(0.3),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.05),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      "Cancel",
+                      style: TextStyle(color: Colors.white54),
+                    ),
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: _primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                    ),
+                    onPressed: () {
+                      if (selectedRating == 0) return;
+                      completeJobRequest(
+                        requestId,
+                        selectedRating,
+                        reviewController.text,
+                      );
+                      Navigator.pop(context);
+                    },
+                    child: const Text(
+                      "SUBMIT",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   // ================= COMPLAINT =================
 
   void openComplaintModal(String workerId) {
@@ -303,7 +430,7 @@ class _JobRequestsPageState extends State<JobRequestsPage> {
                   _buildFilterTitle("Status"),
                   const SizedBox(height: 10),
                   _buildChipFilter(
-                    ["All", "pending", "accepted", "rejected"],
+                    ["All", "pending", "accepted", "completed", "rejected"],
                     tempStatus,
                     (val) => setModalState(() => tempStatus = val),
                   ),
@@ -528,6 +655,7 @@ class _JobRequestsPageState extends State<JobRequestsPage> {
 
     Color statusColor = Colors.orange;
     if (status == "accepted") statusColor = Colors.green;
+    if (status == "completed") statusColor = Colors.blueAccent;
     if (status == "rejected") statusColor = Colors.red;
 
     return Container(
@@ -601,13 +729,24 @@ class _JobRequestsPageState extends State<JobRequestsPage> {
                     ],
                   ),
                 if (status == "accepted")
-                  SizedBox(
-                    width: double.infinity,
-                    child: _buildActionButton(
-                      "Report Issue",
-                      Colors.orangeAccent,
-                      () => openComplaintModal(worker["_id"]),
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildActionButton(
+                          "Report Issue",
+                          Colors.orangeAccent,
+                          () => openComplaintModal(worker["_id"]),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildActionButton(
+                          "Completed?",
+                          Colors.blueAccent,
+                          () => showRatingDialog(r["_id"]),
+                        ),
+                      ),
+                    ],
                   ),
               ],
             ),

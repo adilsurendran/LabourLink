@@ -3,6 +3,7 @@ import {
   acceptRequest,
   addWork,
   cancelUserRequest,
+  completeJobRequest,
   completeWorkAndRate,
   createComplaint,
   createRequest,
@@ -38,6 +39,9 @@ userRouter.put("/cancel/:requestId", cancelUserRequest);
 
 // Complete work + rating
 userRouter.put("/complete/:requestId", completeWorkAndRate);
+
+// Complete job request (from worker selection page)
+userRouter.put("/complete-job-request/:requestId", completeJobRequest);
 
 userRouter.post("/add-work", addWork);
 
