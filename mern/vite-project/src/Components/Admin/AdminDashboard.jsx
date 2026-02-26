@@ -61,6 +61,10 @@ const AdminDashboard = () => {
                         <span className="nav-icon">💬</span>
                         {!isCollapsed && <span className="nav-text">Feedback</span>}
                     </NavLink>
+                    <NavLink to="/Admin/FlaggedReviews" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
+                        <span className="nav-icon">🚩</span>
+                        {!isCollapsed && <span className="nav-text">Flagged Reviews</span>}
+                    </NavLink>
                 </nav>
 
                 <div className="sidebar-logout">

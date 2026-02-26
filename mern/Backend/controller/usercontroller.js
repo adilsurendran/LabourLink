@@ -171,6 +171,57 @@ export const cancelUserRequest = async (req, res) => {
 };
 
 // Complete job request (from worker selection page)
+// export const completeJobRequest = async (req, res) => {
+//   try {
+//     const { requestId } = req.params;
+//     const { rating, review } = req.body;
+
+//     if (!rating)
+//       return res.status(400).json({ success: false, message: "Rating required" });
+
+//     const request = await jobRequestModel.findById(requestId);
+
+//     if (!request)
+//       return res.status(404).json({ success: false, message: "Request not found" });
+
+//     if (request.status !== "accepted")
+//       return res.status(400).json({
+//         success: false,
+//         message: "Only accepted requests can be completed",
+//       });
+
+//     // 1. Update JobRequest
+//     request.status = "completed";
+//     await request.save();
+
+//     // 2. Update the associated Work model
+//     const work = await workModel.findById(request.workId);
+//     if (work) {
+//       work.status = "completed";
+//       work.rating = rating;
+//       work.review = review || null;
+//       await work.save();
+//     }
+
+//     // 3. Update worker rating
+//     const worker = await WORKER.findById(request.workerId);
+//     if (worker) {
+//       worker.rating.push(rating);
+//       const total = worker.rating.reduce((a, b) => a + b, 0);
+//       worker.avgRating = total / worker.rating.length;
+//       await worker.save();
+//     }
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Job completed and rated successfully",
+//       data: request,
+//     });
+//   } catch (error) {
+//     console.error("Complete Job Request Error:", error);
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
 export const completeJobRequest = async (req, res) => {
   try {
     const { requestId } = req.params;
@@ -190,25 +241,53 @@ export const completeJobRequest = async (req, res) => {
         message: "Only accepted requests can be completed",
       });
 
-    // 1. Update JobRequest
+    // 1️⃣ Calculate Hybrid Rating
+    const hybrid = calculateHybridRating(rating, review);
+
+    // 2️⃣ Update JobRequest
     request.status = "completed";
+    request.userRating = rating;
+    request.sentimentRating = hybrid.sentimentRating;
+    request.compoundScore = hybrid.compound;
+    request.finalRating = hybrid.finalRating;
+    request.review = review || null;
+    request.isFlagged = hybrid.isFlagged;
+
     await request.save();
 
-    // 2. Update the associated Work model
+    // 3️⃣ Update Work Model
     const work = await workModel.findById(request.workId);
     if (work) {
       work.status = "completed";
-      work.rating = rating;
+      work.userRating = rating;
+      work.sentimentRating = hybrid.sentimentRating;
+      work.compoundScore = hybrid.compound;
+      work.finalRating = hybrid.finalRating;
       work.review = review || null;
+      work.isFlagged = hybrid.isFlagged;
       await work.save();
     }
 
-    // 3. Update worker rating
+    // 4️⃣ Update Worker
     const worker = await WORKER.findById(request.workerId);
     if (worker) {
-      worker.rating.push(rating);
-      const total = worker.rating.reduce((a, b) => a + b, 0);
-      worker.avgRating = total / worker.rating.length;
+      worker.ratings.push({
+        userRating: rating,
+        sentimentRating: hybrid.sentimentRating,
+        finalRating: hybrid.finalRating,
+        compoundScore: hybrid.compound,
+        isFlagged: hybrid.isFlagged,
+        review: review || null,
+      });
+
+      const total = worker.ratings.reduce(
+        (sum, r) => sum + r.finalRating,
+        0
+      );
+
+      worker.reviewCount = worker.ratings.length;
+      worker.avgRating = Number((total / worker.reviewCount).toFixed(2));
+
       await worker.save();
     }
 
@@ -223,8 +302,49 @@ export const completeJobRequest = async (req, res) => {
   }
 };
 
-
 // Complete work + rating
+// export const completeWorkAndRate = async (req, res) => {
+//   try {
+//     const { requestId } = req.params;
+//     const { rating, review } = req.body;
+
+//     if (!rating)
+//       return res.status(400).json({ message: "Rating required" });
+
+//     const request = await REQUEST.findById(requestId);
+
+//     if (!request)
+//       return res.status(404).json({ message: "Not found" });
+
+//     if (request.status !== "accepted")
+//       return res.status(400).json({
+//         message: "Only accepted work can be completed",
+//       });
+
+//     // Update request
+//     request.status = "completed";
+//     request.rating = rating;
+//     request.review = review || null;
+//     await request.save();
+
+//     // Update worker rating
+//     const worker = await WORKER.findById(request.workerId);
+
+//     worker.rating.push(rating);
+
+//     const total =
+//       worker.rating.reduce((a, b) => a + b, 0);
+
+//     worker.avgRating =
+//       total / worker.rating.length;
+
+//     await worker.save();
+
+//     res.status(200).json(request);
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
 export const completeWorkAndRate = async (req, res) => {
   try {
     const { requestId } = req.params;
@@ -243,22 +363,39 @@ export const completeWorkAndRate = async (req, res) => {
         message: "Only accepted work can be completed",
       });
 
-    // Update request
+    // 1️⃣ Calculate Hybrid Rating
+    const hybrid = calculateHybridRating(rating, review);
+
+    // 2️⃣ Update Request
     request.status = "completed";
-    request.rating = rating;
+    request.userRating = rating;
+    request.sentimentRating = hybrid.sentimentRating;
+    request.compoundScore = hybrid.compound;
+    request.finalRating = hybrid.finalRating;
     request.review = review || null;
+    request.isFlagged = hybrid.isFlagged;
+
     await request.save();
 
-    // Update worker rating
+    // 3️⃣ Update Worker
     const worker = await WORKER.findById(request.workerId);
 
-    worker.rating.push(rating);
+    worker.ratings.push({
+      userRating: rating,
+      sentimentRating: hybrid.sentimentRating,
+      finalRating: hybrid.finalRating,
+      compoundScore: hybrid.compound,
+      isFlagged: hybrid.isFlagged,
+      review: review || null,
+    });
 
-    const total =
-      worker.rating.reduce((a, b) => a + b, 0);
+    const total = worker.ratings.reduce(
+      (sum, r) => sum + r.finalRating,
+      0
+    );
 
-    worker.avgRating =
-      total / worker.rating.length;
+    worker.reviewCount = worker.ratings.length;
+    worker.avgRating = Number((total / worker.reviewCount).toFixed(2));
 
     await worker.save();
 
@@ -521,6 +658,7 @@ export const rejectRequest = async (req, res) => {
 };
 
 import Complaint from "../models/Complaint.js";
+import { calculateHybridRating } from "../utils/hybridRating.js";
 
 export const createComplaint = async (req, res) => {
   try {

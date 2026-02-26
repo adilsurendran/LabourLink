@@ -237,3 +237,102 @@ export const getAdminStats = async (req, res) => {
     });
   }
 };
+
+
+export const getFlaggedReviews = async (req, res) => {
+  try {
+    const reviews = await REQUEST.find({
+      isFlagged: true,
+      status: "completed",
+    })
+      .populate("workerId", "name email")
+      .populate("userId", "name email")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, data: reviews });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const approveFlaggedReview = async (req, res) => {
+  try {
+    const { requestId } = req.params;
+
+    const request = await REQUEST.findById(requestId);
+    request.isFlagged = false;
+    await request.save();
+
+    res.status(200).json({ success: true, message: "Review approved" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteFlaggedReview = async (req, res) => {
+  try {
+    const { requestId } = req.params;
+
+    const request = await REQUEST.findById(requestId);
+    const worker = await WORKER.findById(request.workerId);
+
+    worker.ratings = worker.ratings.filter(
+      (r) => r.compoundScore !== request.compoundScore
+    );
+
+    const total = worker.ratings.reduce(
+      (sum, r) => sum + r.finalRating,
+      0
+    );
+
+    worker.reviewCount = worker.ratings.length;
+    worker.avgRating =
+      worker.reviewCount > 0
+        ? Number((total / worker.reviewCount).toFixed(2))
+        : 0;
+
+    await worker.save();
+    await REQUEST.findByIdAndDelete(requestId);
+
+    res.status(200).json({ success: true, message: "Review deleted" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const adjustFlaggedReview = async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const { newRating } = req.body;
+
+    const request = await REQUEST.findById(requestId);
+    const worker = await WORKER.findById(request.workerId);
+
+    request.finalRating = newRating;
+    request.isFlagged = false;
+    await request.save();
+
+    const ratingObj = worker.ratings.find(
+      (r) => r.compoundScore === request.compoundScore
+    );
+
+    if (ratingObj) {
+      ratingObj.finalRating = newRating;
+    }
+
+    const total = worker.ratings.reduce(
+      (sum, r) => sum + r.finalRating,
+      0
+    );
+
+    worker.avgRating = Number(
+      (total / worker.ratings.length).toFixed(2)
+    );
+
+    await worker.save();
+
+    res.status(200).json({ success: true, message: "Rating adjusted" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

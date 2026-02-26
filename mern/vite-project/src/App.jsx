@@ -9,6 +9,7 @@ import AdminUserRequests from './Components/Admin/AdminUserRequests'
 import AdminJobRequests from './Components/Admin/AdminJobRequests'
 import AdminDashboard from './Components/Admin/AdminDashboard'
 import AdminDashboardHome from './Components/Admin/AdminDashboardHome'
+import AdminFlaggedReviews from './Components/Admin/AdminFlaggedReviews'
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
           <Route path='Feedback' element={<AdminFeedback />} />
           <Route path='UserRequests' element={<AdminUserRequests />} />
           <Route path='JobRequests' element={<AdminJobRequests />} />
+          <Route path='FlaggedReviews' element={<AdminFlaggedReviews />} />
           {/* Default admin view */}
           <Route index element={<Navigate to="Dashboard" replace />} />
         </Route>
