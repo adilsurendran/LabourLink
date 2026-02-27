@@ -22,7 +22,7 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _isUpdating = false;
   bool _isEditMode = false;
   bool _isAvailable = true;
-  bool _useCurrentLocation = false;
+  final bool _useCurrentLocation = false;
 
   String? profileId;
 
@@ -326,7 +326,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                               Switch(
                                 value: _isAvailable,
-                                activeColor: _primaryColor,
+                                activeThumbColor: _primaryColor,
                                 onChanged: _isEditMode
                                     ? (val) =>
                                           setState(() => _isAvailable = val)

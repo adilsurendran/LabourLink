@@ -11,7 +11,7 @@ import 'package:labourlink/login.dart';
 
 // ---------------- API CONFIG ----------------
 final Dio dio = Dio();
-final String baseurl = "http://172.23.16.1:8000";
+String baseurl = "";
 
 // ---------------- REGISTER PAGE ----------------
 class RegisterFormPage1 extends StatefulWidget {
