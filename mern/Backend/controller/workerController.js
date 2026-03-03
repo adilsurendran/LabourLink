@@ -18,6 +18,7 @@ export const registerworker = async (req, res) => {
       skills,
       uniqueid,
       location,
+      gender
     } = req.body;
 
     const existinguser = await LOGIN.findOne({ username: email });
@@ -45,6 +46,7 @@ export const registerworker = async (req, res) => {
       dob,
       age,
       wage,
+      gender,
       wage_unit,
       skills: skillsArray,
       uniqueid,
@@ -279,7 +281,6 @@ export const updateRequestStatus = async (req, res) => {
 
 
 export const getPendingJobs = async (req, res) => {
-  console.log("hiiiiiiiiii");
   
   try {
 

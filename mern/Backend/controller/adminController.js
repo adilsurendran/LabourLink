@@ -9,7 +9,6 @@ import WORKER from "../models/worker.js";
 // ================= GET COMPLAINTS =================
 
 export const getComplaints = async (req, res) => {
-  console.log("hiofxjcyguvjhkbj");
 
   try {
     const { status } = req.query;

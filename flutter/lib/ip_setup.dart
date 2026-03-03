@@ -13,8 +13,8 @@ class IPSetupPage extends StatefulWidget {
 
 class _IPSetupPageState extends State<IPSetupPage>
     with SingleTickerProviderStateMixin {
-  final _ipController = TextEditingController(text: "172.23.16.1");
-  final _portController = TextEditingController(text: "8000");
+  final _ipController = TextEditingController();
+  final _portController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   late AnimationController _controller;
 
@@ -188,7 +188,7 @@ class _IPSetupPageState extends State<IPSetupPage>
                     controller: _ipController,
                     label: "Server IP Address",
                     icon: Icons.lan_outlined,
-                    hint: "e.g. 172.23.16.1",
+                    hint: "eg. 172.23.16.1",
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -198,7 +198,7 @@ class _IPSetupPageState extends State<IPSetupPage>
                     controller: _portController,
                     label: "Port Number",
                     icon: Icons.numbers_outlined,
-                    hint: "e.g. 8000",
+                    hint: "eg. 8000",
                     isNumber: true,
                   ),
                 ),

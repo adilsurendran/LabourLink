@@ -26,10 +26,11 @@ const workerregistrationschema = mongoose.Schema({
   photo: { type: String },
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  phone_number: { type: Number, required: true, unique: true },
+  phone_number: { type: Number, required: true },
   dob: { type: String, required: true },
   age: { type: Number },
   wage: { type: Number, required: true },
+  gender: {type:String,required:true,enum:["Male","Female","Other"]},
 
   // Structured ratings
   ratings: [

@@ -69,7 +69,7 @@ const AdminDashboard = () => {
 
                 <div className="sidebar-logout">
                     <button className="logout-btn-sidebar" onClick={handleLogout}>
-                        <span className="logout-icon">🚪</span>
+                        <span className="logout-icon"><i class="fa-solid fa-arrow-right-from-bracket"></i></span>
                         {!isCollapsed && <span className="logout-text">Logout</span>}
                     </button>
                 </div>

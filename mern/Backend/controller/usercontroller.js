@@ -701,7 +701,6 @@ export const createComplaint = async (req, res) => {
 
 export const getUserComplaints = async (req, res) => {
   console.log(req.params);
-  console.log("hiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii");
 
 
   try {

@@ -10,7 +10,14 @@ import 'package:image_picker/image_picker.dart';
 import 'package:labourlink/login.dart';
 
 // ---------------- API CONFIG ----------------
-final Dio dio = Dio();
+final Dio dio = Dio(
+  BaseOptions(
+    connectTimeout: const Duration(seconds: 15),
+    sendTimeout: const Duration(seconds: 15),
+    receiveTimeout: const Duration(seconds: 20),
+  ),
+);
+
 String baseurl = "";
 
 // ---------------- REGISTER PAGE ----------------
