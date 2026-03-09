@@ -10,7 +10,11 @@ import {
     getFlaggedReviews,
     approveFlaggedReview,
     deleteFlaggedReview,
-    adjustFlaggedReview
+    adjustFlaggedReview,
+    getWorkFlaggedReviews,
+    approveWorkFlaggedReview,
+    deleteWorkFlaggedReview,
+    adjustWorkFlaggedReview
 } from "../controller/adminController.js";
 
 
@@ -34,5 +38,16 @@ Crouter.delete("/delete-review/:requestId", deleteFlaggedReview);
 
 // Adjust rating manually
 Crouter.put("/adjust-review/:requestId", adjustFlaggedReview);
+
+
+// new routesssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss
+
+Crouter.get("/work-flagged-reviews", getWorkFlaggedReviews);
+
+Crouter.put("/work-approve-review/:requestId", approveWorkFlaggedReview);
+
+Crouter.delete("/work-delete-review/:requestId", deleteWorkFlaggedReview);
+
+Crouter.put("/work-adjust-review/:requestId", adjustWorkFlaggedReview);
 
 export default Crouter;

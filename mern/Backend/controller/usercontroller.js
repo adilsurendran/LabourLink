@@ -246,13 +246,6 @@ export const completeJobRequest = async (req, res) => {
 
     // 2️⃣ Update JobRequest
     request.status = "completed";
-    request.userRating = rating;
-    request.sentimentRating = hybrid.sentimentRating;
-    request.compoundScore = hybrid.compound;
-    request.finalRating = hybrid.finalRating;
-    request.review = review || null;
-    request.isFlagged = hybrid.isFlagged;
-
     await request.save();
 
     // 3️⃣ Update Work Model
@@ -281,12 +274,14 @@ export const completeJobRequest = async (req, res) => {
       });
 
       const total = worker.ratings.reduce(
-        (sum, r) => sum + r.finalRating,
+        (sum, r) => sum + (Number(r.finalRating) || 0),
         0
       );
 
       worker.reviewCount = worker.ratings.length;
-      worker.avgRating = Number((total / worker.reviewCount).toFixed(2));
+      worker.avgRating = worker.reviewCount > 0
+        ? Number((total / worker.reviewCount).toFixed(2))
+        : 0;
 
       await worker.save();
     }
@@ -390,12 +385,14 @@ export const completeWorkAndRate = async (req, res) => {
     });
 
     const total = worker.ratings.reduce(
-      (sum, r) => sum + r.finalRating,
+      (sum, r) => sum + (Number(r.finalRating) || 0),
       0
     );
 
     worker.reviewCount = worker.ratings.length;
-    worker.avgRating = Number((total / worker.reviewCount).toFixed(2));
+    worker.avgRating = worker.reviewCount > 0
+      ? Number((total / worker.reviewCount).toFixed(2))
+      : 0;
 
     await worker.save();
 
@@ -491,7 +488,7 @@ export const updateWork = async (req, res) => {
     const { id } = req.params;
     const { title, description, date, place } = req.body;
 
-    const work = await Work.findById(id);
+    const work = await workModel.findById(id);
 
     if (!work) {
       return res.status(404).json({
@@ -535,7 +532,7 @@ export const deleteWork = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const work = await Work.findById(id);
+    const work = await workModel.findById(id);
 
     if (!work) {
       return res.status(404).json({
